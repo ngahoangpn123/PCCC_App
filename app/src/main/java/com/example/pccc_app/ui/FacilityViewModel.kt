@@ -24,4 +24,10 @@ class FacilityViewModel(application: Application) : AndroidViewModel(application
             dao.insert(facility)
         }
     }
+
+    fun deleteFacility(facility: Facility) {
+        viewModelScope.launch {
+            dao.delete(facility)
+        }
+    }
 }
