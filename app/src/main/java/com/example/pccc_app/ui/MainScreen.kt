@@ -18,6 +18,8 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 
+private const val ROUTE_CO_SO_THEM = "co_so_them"
+
 @Composable
 fun MainScreen() {
     val navController = rememberNavController()
@@ -26,22 +28,25 @@ fun MainScreen() {
 
     Scaffold(
         bottomBar = {
-            NavigationBar {
-                Screen.entries.forEach { screen ->
-                    NavigationBarItem(
-                        selected = currentRoute == screen.route,
-                        onClick = {
-                            navController.navigate(screen.route) {
-                                popUpTo(navController.graph.findStartDestination().id) {
-                                    saveState = true
+            // Ẩn thanh 5 tab khi đang ở form thêm cơ sở
+            if (currentRoute != ROUTE_CO_SO_THEM) {
+                NavigationBar {
+                    Screen.entries.forEach { screen ->
+                        NavigationBarItem(
+                            selected = currentRoute == screen.route,
+                            onClick = {
+                                navController.navigate(screen.route) {
+                                    popUpTo(navController.graph.findStartDestination().id) {
+                                        saveState = true
+                                    }
+                                    launchSingleTop = true
+                                    restoreState = true
                                 }
-                                launchSingleTop = true
-                                restoreState = true
-                            }
-                        },
-                        icon = { Icon(screen.icon, contentDescription = screen.label) },
-                        label = { Text(screen.label, maxLines = 1) }
-                    )
+                            },
+                            icon = { Icon(screen.icon, contentDescription = screen.label) },
+                            label = { Text(screen.label, maxLines = 1) }
+                        )
+                    }
                 }
             }
         }
@@ -52,7 +57,12 @@ fun MainScreen() {
             modifier = Modifier.padding(innerPadding)
         ) {
             composable(Screen.TONG_QUAN.route) { PlaceholderScreen("Tổng quan") }
-            composable(Screen.CO_SO.route) { PlaceholderScreen("Cơ sở") }
+            composable(Screen.CO_SO.route) {
+                CoSoScreen(onAddClick = { navController.navigate(ROUTE_CO_SO_THEM) })
+            }
+            composable(ROUTE_CO_SO_THEM) {
+                FacilityFormScreen(onDone = { navController.popBackStack() })
+            }
             composable(Screen.DOI_PCCC.route) { PlaceholderScreen("Đội PCCC") }
             composable(Screen.THIET_BI.route) { PlaceholderScreen("Thiết bị") }
             composable(Screen.HOAT_DONG.route) { PlaceholderScreen("Hoạt động") }
