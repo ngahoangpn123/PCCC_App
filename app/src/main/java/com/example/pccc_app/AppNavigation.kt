@@ -112,8 +112,7 @@ fun AppNavigation() {
                 FacilityFormScreen(onDone = { navController.popBackStack() })
             }
             composable(FunctionModule.TEAM.route) {
-                // TODO: gắn lại màn hình Đội PCCC cũ
-                PlaceholderScreen("Đội PCCC & CNCH")
+                TeamModuleScreen()
             }
             composable(FunctionModule.EQUIPMENT.route) {
                 // TODO: gắn lại màn hình Thiết bị cũ
