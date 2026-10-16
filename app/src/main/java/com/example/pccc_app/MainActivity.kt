@@ -20,7 +20,7 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             PCCC_AppTheme {
-                MainScreen()
+                AppNavigation()
                 }
             }
         }
