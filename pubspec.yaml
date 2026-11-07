@@ -1,0 +1,25 @@
+name: pccc_app
+description: "App hỗ trợ người đứng đầu cơ sở thực hiện trách nhiệm PCCC và CNCH."
+publish_to: 'none'
+version: 0.1.0+1
+
+environment:
+  sdk: ^3.8.0
+
+dependencies:
+  flutter:
+    sdk: flutter
+  # Hiển thị lịch, chọn ngày... bằng tiếng Việt
+  flutter_localizations:
+    sdk: flutter
+  cupertino_icons: ^1.0.8
+  # Kết nối Supabase (chỉ khởi tạo khi có file env/dev.json)
+  supabase_flutter: ^2.15.4
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^6.0.0
+
+flutter:
+  uses-material-design: true
