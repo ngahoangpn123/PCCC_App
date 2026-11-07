@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 
 import '../../core/utils/ui_helpers.dart';
+import '../acceptance/screens/acceptance_hub_screen.dart';
+import '../acceptance/screens/pc01_declaration_screen.dart';
+import '../acceptance/screens/readiness_screen.dart';
 import '../drills/screens/drill_detail_screen.dart';
 import '../equipment/screens/equipment_detail_screen.dart';
 import '../facility/screens/dossier_detail_screen.dart';
@@ -22,6 +25,11 @@ Future<void> openNotificationTarget(
     NotifTarget.training => TrainingSessionDetailScreen(sessionId: id),
     NotifTarget.drill => DrillDetailScreen(drillId: id),
     NotifTarget.member => MemberDetailScreen(memberId: id),
+    NotifTarget.acceptance => switch (id) {
+      'pc01' => const Pc01DeclarationScreen(),
+      'readiness' => const ReadinessScreen(),
+      _ => const AcceptanceHubScreen(),
+    },
     NotifTarget.none => null,
   };
   if (screen != null) await pushScreen(context, screen);

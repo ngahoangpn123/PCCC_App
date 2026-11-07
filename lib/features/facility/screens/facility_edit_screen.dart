@@ -28,6 +28,20 @@ class _FacilityEditScreenState extends State<FacilityEditScreen> {
   late final _officerName = TextEditingController(text: widget.facility.officerName);
   late final _officerPhone = TextEditingController(text: widget.facility.officerPhone);
   late final _email = TextEditingController(text: widget.facility.email);
+  late final _staff = TextEditingController(
+    text: widget.facility.staffCount == 0 ? '' : '${widget.facility.staffCount}',
+  );
+  late final _lat = TextEditingController(
+    text: widget.facility.lat == 0 ? '' : '${widget.facility.lat}',
+  );
+  late final _lng = TextEditingController(
+    text: widget.facility.lng == 0 ? '' : '${widget.facility.lng}',
+  );
+  late final _hazard = TextEditingController(text: widget.facility.hazard);
+  late String _level = managementLevels.contains(widget.facility.managementLevel)
+      ? widget.facility.managementLevel
+      : managementLevels.first;
+  late bool _construction = widget.facility.hasConstruction;
   late String _type = facilityTypes.contains(widget.facility.type)
       ? widget.facility.type
       : facilityTypes.last;
@@ -37,6 +51,7 @@ class _FacilityEditScreenState extends State<FacilityEditScreen> {
     for (final c in [
       _name, _code, _address, _field, _scale, _building,
       _headName, _headPhone, _officerName, _officerPhone, _email,
+      _staff, _lat, _lng, _hazard,
     ]) {
       c.dispose();
     }
@@ -57,7 +72,13 @@ class _FacilityEditScreenState extends State<FacilityEditScreen> {
       ..headPhone = _headPhone.text.trim()
       ..officerName = _officerName.text.trim()
       ..officerPhone = _officerPhone.text.trim()
-      ..email = _email.text.trim();
+      ..email = _email.text.trim()
+      ..staffCount = int.tryParse(_staff.text.trim()) ?? 0
+      ..lat = double.tryParse(_lat.text.trim().replaceAll(',', '.')) ?? 0
+      ..lng = double.tryParse(_lng.text.trim().replaceAll(',', '.')) ?? 0
+      ..hazard = _hazard.text.trim()
+      ..managementLevel = _level
+      ..hasConstruction = _construction;
     await Locator.facility.saveFacility(f);
     if (f.id == AppSession.instance.currentFacilityId) {
       AppSession.instance.switchFacility(f.id, f.name);
@@ -92,6 +113,59 @@ class _FacilityEditScreenState extends State<FacilityEditScreen> {
             AppTextField(label: 'Lĩnh vực hoạt động', controller: _field),
             AppTextField(label: 'Quy mô', controller: _scale),
             AppTextField(label: 'Đặc điểm công trình', controller: _building, maxLines: 3),
+            AppTextField(
+              label: 'Số người thường xuyên làm việc',
+              controller: _staff,
+              keyboardType: TextInputType.number,
+              hint: 'Dưới 20 người: văn bản phân công; từ 20 người: Quyết định thành lập Đội',
+            ),
+            AppTextField(
+              label: 'Đặc điểm nguy hiểm cháy, nổ',
+              controller: _hazard,
+              maxLines: 3,
+            ),
+            SwitchListTile(
+              contentPadding: EdgeInsets.zero,
+              value: _construction,
+              title: const Text('Đang thi công mới / cải tạo / thay đổi công năng'),
+              subtitle: const Text('Bật để yêu cầu Tự nghiệm thu PC18 trước khi đưa vào sử dụng'),
+              onChanged: (v) => setState(() => _construction = v),
+            ),
+            const FormSectionTitle('Vị trí & phân cấp quản lý'),
+            Row(
+              children: [
+                Expanded(
+                  child: AppTextField(
+                    label: 'Vĩ độ',
+                    controller: _lat,
+                    keyboardType: const TextInputType.numberWithOptions(decimal: true, signed: true),
+                  ),
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: AppTextField(
+                    label: 'Kinh độ',
+                    controller: _lng,
+                    keyboardType: const TextInputType.numberWithOptions(decimal: true, signed: true),
+                  ),
+                ),
+              ],
+            ),
+            Align(
+              alignment: Alignment.centerLeft,
+              child: TextButton.icon(
+                onPressed: () => showComingSoon(context, 'Lấy tọa độ từ GPS / bản đồ GIS'),
+                icon: const Icon(Icons.my_location, size: 18),
+                label: const Text('Lấy vị trí hiện tại'),
+              ),
+            ),
+            DropdownField<String>(
+              label: 'Phân cấp quản lý',
+              value: _level,
+              items: managementLevels,
+              labelOf: (v) => v,
+              onChanged: (v) => setState(() => _level = v),
+            ),
             const FormSectionTitle('Người chịu trách nhiệm'),
             AppTextField(label: 'Người đứng đầu', controller: _headName, required: true),
             AppTextField(

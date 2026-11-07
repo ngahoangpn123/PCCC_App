@@ -25,6 +25,13 @@ enum DrillStage {
 
 const scenarioTypes = ['Chữa cháy', 'Cứu nạn, cứu hộ', 'Thoát nạn', 'Tổng hợp'];
 
+/// Loại tài liệu phương án.
+const scenarioForms = [
+  'PC06 – Phương án chữa cháy, CNCH của cơ sở',
+  'PC07 – Phương án của phương tiện giao thông',
+  'Mẫu 02 (TT 36/2025) – Phiếu chiến thuật chữa cháy, CNCH',
+];
+
 /// Phương án: tài liệu / kịch bản. Có thể tổ chức diễn tập nhiều lần.
 class Scenario {
   Scenario({
@@ -36,6 +43,7 @@ class Scenario {
     required this.scope,
     required this.location,
     required this.commander,
+    this.formType = 'PC06 – Phương án chữa cháy, CNCH của cơ sở',
     List<String>? forces,
     List<String>? equipment,
     List<String>? steps,
@@ -51,6 +59,7 @@ class Scenario {
   String scope;
   String location;
   String commander;
+  String formType; // PC06 / PC07 / Mẫu 02
   List<String> forces; // lực lượng tham gia và vai trò
   List<String> equipment; // phương tiện huy động
   List<String> steps; // các bước thực hiện

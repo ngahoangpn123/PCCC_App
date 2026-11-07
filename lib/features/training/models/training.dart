@@ -15,6 +15,9 @@ enum SessionStatus {
 const trainingFormats = ['Lý thuyết', 'Thực hành', 'Lý thuyết + thực hành'];
 const attendanceResults = ['Đạt', 'Cần bổ sung', 'Không đạt'];
 
+/// Loại buổi: tính giờ riêng theo Điều 22 NĐ 347/2026.
+const sessionKinds = ['Huấn luyện nghiệp vụ', 'Bồi dưỡng nghiệp vụ'];
+
 /// Kế hoạch huấn luyện (theo tháng / quý / năm). Một kế hoạch gồm nhiều buổi.
 class TrainingPlan {
   TrainingPlan({
@@ -38,12 +41,16 @@ class Attendance {
     this.present = true,
     this.result = 'Đạt',
     this.note = '',
+    this.theory,
+    this.practice,
   });
 
   final String memberId;
   bool present;
   String result;
   String note;
+  double? theory; // điểm lý thuyết
+  double? practice; // điểm thực hành
 }
 
 class TrainingSession {
@@ -58,6 +65,7 @@ class TrainingSession {
     required this.format,
     required this.durationMinutes,
     this.status = SessionStatus.planned,
+    this.kind = 'Huấn luyện nghiệp vụ',
     this.evaluation = '',
     List<Attendance>? attendance,
     List<String>? attachments,
@@ -74,6 +82,7 @@ class TrainingSession {
   String format;
   int durationMinutes;
   SessionStatus status;
+  String kind; // Huấn luyện / Bồi dưỡng nghiệp vụ
   String evaluation; // đánh giá chung của buổi
   final List<Attendance> attendance;
   final List<String> attachments;

@@ -7,7 +7,10 @@ enum EventKind {
   training('Huấn luyện', AppColors.info, Icons.school_outlined),
   drill('Diễn tập', AppColors.gold, Icons.local_fire_department_outlined),
   maintenance('Kiểm tra, bảo dưỡng', AppColors.success, Icons.build_outlined),
-  deadline('Hạn hồ sơ', AppColors.danger, Icons.assignment_late_outlined);
+  deadline('Hạn hồ sơ', AppColors.danger, Icons.assignment_late_outlined),
+  acceptance('Chạy thử, tự nghiệm thu', Color(0xFF6A3FA0), Icons.fact_check_outlined),
+  selfCheck('Tự kiểm tra định kỳ PC02', Color(0xFF00897B), Icons.checklist),
+  postInspection('Tiếp đoàn hậu kiểm', Color(0xFF2F6DB5), Icons.verified_user_outlined);
 
   const EventKind(this.label, this.color, this.icon);
   final String label;

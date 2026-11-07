@@ -27,10 +27,10 @@ class _DossierDetailScreenState extends State<DossierDetailScreen> {
 
   // Các bước của quy trình thao tác hồ sơ.
   static const _steps = [
-    'Chọn biểu mẫu',
+    'Chọn mẫu',
     'Tạo hồ sơ',
-    'Kiểm tra thông tin',
-    'Ký và gửi',
+    'Kiểm tra hợp lệ',
+    'Ký số & gửi / đồng bộ CSDL',
     'Theo dõi kết quả',
   ];
 
@@ -46,9 +46,10 @@ class _DossierDetailScreenState extends State<DossierDetailScreen> {
   /// Bước hiện tại trong quy trình, suy ra từ trạng thái.
   int _stepOf(DossierStatus s) => switch (s) {
     DossierStatus.notCreated => 0,
-    DossierStatus.draft => 2,
-    DossierStatus.waitingSign || DossierStatus.waitingSubmit => 3,
-    _ => 4,
+    DossierStatus.draft || DossierStatus.needUpdate => 2,
+    DossierStatus.signed => 3,
+    DossierStatus.submitted => 4,
+    DossierStatus.completed => 5,
   };
 
   Future<void> _changeStatus(Dossier d) async {
@@ -70,8 +71,8 @@ class _DossierDetailScreenState extends State<DossierDetailScreen> {
               ListTile(
                 leading: Icon(Icons.circle, size: 14, color: s.color),
                 title: Text(s.label),
-                subtitle: s == DossierStatus.approved
-                    ? const Text('Chỉ chọn khi có xác nhận từ đơn vị có thẩm quyền')
+                subtitle: s == DossierStatus.completed
+                    ? const Text('Chỉ chọn khi đã có mã biên nhận / xác nhận từ CSDL Quốc gia')
                     : null,
                 trailing: s == d.status ? const Icon(Icons.check) : null,
                 onTap: () => Navigator.pop(c, s),
@@ -115,10 +116,26 @@ class _DossierDetailScreenState extends State<DossierDetailScreen> {
         bottomNavigationBar: SafeArea(
           child: Padding(
             padding: const EdgeInsets.all(12),
-            child: FilledButton.icon(
-              onPressed: () => _changeStatus(d),
-              icon: const Icon(Icons.swap_vert),
-              label: const Text('Chuyển trạng thái'),
+            child: Row(
+              children: [
+                Expanded(
+                  child: OutlinedButton.icon(
+                    onPressed: () => _changeStatus(d),
+                    icon: const Icon(Icons.swap_vert),
+                    label: const Text('Trạng thái'),
+                  ),
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: FilledButton.icon(
+                    onPressed: d.status == DossierStatus.completed
+                        ? null
+                        : () => showComingSoon(context, 'Ký số & đồng bộ CSDL Quốc gia'),
+                    icon: const Icon(Icons.draw_outlined),
+                    label: const Text('Ký số & gửi'),
+                  ),
+                ),
+              ],
             ),
           ),
         ),
@@ -160,6 +177,7 @@ class _DossierDetailScreenState extends State<DossierDetailScreen> {
                 InfoRow('Mã biểu mẫu', d.formCode),
                 InfoRow('Người phụ trách', d.owner),
                 InfoRow('Cập nhật lần cuối', fmtDate(d.updatedAt)),
+                InfoRow('Thời hạn lưu trữ', d.retention),
                 InfoRow(
                   'Ngày đến hạn',
                   d.dueDate == null ? '' : '${fmtDate(d.dueDate!)} (${dueText(d.dueDate!)})',

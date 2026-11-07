@@ -12,7 +12,7 @@ class ActivityLogScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Nhật ký hoạt động')),
+      appBar: AppBar(title: const Text('Nhật ký hoạt động (Audit Log)')),
       body: AsyncBody<List<ActivityLog>>(
         future: Locator.profile.getActivityLogs(),
         builder: (context, logs) => ListView.separated(

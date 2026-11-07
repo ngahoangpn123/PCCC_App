@@ -32,16 +32,19 @@ class _NotificationDetailScreenState extends State<NotificationDetailScreen> {
         () => _future = Locator.notifications.getNotification(widget.notificationId),
       );
 
+  /// Đóng thông báo: bắt buộc nhập kết quả xử lý và đính kèm minh chứng.
   Future<void> _resolve(AppNotification n) async {
-    final ok = await confirmDialog(
-      context,
-      title: 'Xác nhận đã xử lý',
-      message: 'Chỉ xác nhận khi vấn đề đã thực sự được giải quyết '
-          '(vd: thiết bị đã sửa xong, hồ sơ đã bổ sung).',
-      confirmLabel: 'Đã xử lý',
+    final result = await showModalBottomSheet<(String, List<String>)>(
+      context: context,
+      isScrollControlled: true,
+      showDragHandle: true,
+      builder: (c) => const _ResolveSheet(),
     );
-    if (!ok) return;
-    await Locator.notifications.markResolved(n.id);
+    if (result == null) return;
+    final (note, files) = result;
+    await Locator.notifications.markResolved(n.id, resultNote: note, evidence: files);
+    if (!mounted) return;
+    showSnack(context, 'Đã xác nhận xử lý');
     _reload();
   }
 
@@ -83,8 +86,14 @@ class _NotificationDetailScreenState extends State<NotificationDetailScreen> {
               icon: Icons.flag_outlined,
               children: [
                 InfoRow('Phát sinh lúc', fmtDateTime(n.createdAt)),
+                InfoRow('Đối tượng', n.objectLabel),
+                InfoRow('Thời hạn', n.dueDate == null ? '' : '${fmtDateTime(n.dueDate!)} (${dueText(n.dueDate!)})'),
+                InfoRow('Người chịu trách nhiệm', n.assignee),
+                InfoRow('Hành động đề xuất', n.suggestedAction),
                 InfoRow('Đã đọc', n.read ? 'Rồi' : 'Chưa'),
                 InfoRow('Xử lý', n.resolved ? 'Đã xử lý' : 'Chưa xử lý'),
+                if (n.resolved) InfoRow('Kết quả', n.resultNote),
+                if (n.evidence.isNotEmpty) InfoRow('Minh chứng', n.evidence.join(', ')),
                 const SizedBox(height: 6),
                 const Text(
                   'Đã đọc không đồng nghĩa đã xử lý. Thông báo chỉ đóng khi điều kiện hoàn thành được đáp ứng.',
@@ -111,6 +120,74 @@ class _NotificationDetailScreenState extends State<NotificationDetailScreen> {
               ),
           ],
         ),
+      ),
+    );
+  }
+}
+
+class _ResolveSheet extends StatefulWidget {
+  const _ResolveSheet();
+
+  @override
+  State<_ResolveSheet> createState() => _ResolveSheetState();
+}
+
+class _ResolveSheetState extends State<_ResolveSheet> {
+  final _note = TextEditingController();
+  final _files = <String>[];
+
+  @override
+  void dispose() {
+    _note.dispose();
+    super.dispose();
+  }
+
+  bool get _valid => _note.text.trim().isNotEmpty && _files.isNotEmpty;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: EdgeInsets.fromLTRB(16, 0, 16, MediaQuery.of(context).viewInsets.bottom + 16),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          const Text('Xác nhận đã xử lý', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700)),
+          const SizedBox(height: 4),
+          const Text(
+            'Bắt buộc ghi kết quả và đính kèm ít nhất 1 minh chứng.',
+            style: TextStyle(fontSize: 12.5, color: AppColors.textSecondary),
+          ),
+          const SizedBox(height: 12),
+          TextField(
+            controller: _note,
+            maxLines: 3,
+            onChanged: (_) => setState(() {}),
+            decoration: const InputDecoration(labelText: 'Kết quả xử lý *'),
+          ),
+          const SizedBox(height: 10),
+          Wrap(
+            spacing: 6,
+            runSpacing: 6,
+            children: [
+              for (final f in _files)
+                InputChip(label: Text(f), onDeleted: () => setState(() => _files.remove(f))),
+              ActionChip(
+                avatar: const Icon(Icons.add_a_photo_outlined, size: 18),
+                label: const Text('Thêm minh chứng *'),
+                // TODO: chọn ảnh / tệp thật.
+                onPressed: () => setState(
+                  () => _files.add('minh_chung_${DateTime.now().millisecondsSinceEpoch % 100000}.jpg'),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          FilledButton(
+            onPressed: _valid ? () => Navigator.pop(context, (_note.text.trim(), _files.toList())) : null,
+            child: const Text('Xác nhận'),
+          ),
+        ],
       ),
     );
   }

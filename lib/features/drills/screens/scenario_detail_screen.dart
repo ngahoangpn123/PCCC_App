@@ -97,6 +97,7 @@ class _ScenarioDetailScreenState extends State<ScenarioDetailScreen> {
                 title: sc.name,
                 icon: Icons.description_outlined,
                 children: [
+                  InfoRow('Biểu mẫu', sc.formType),
                   InfoRow('Loại hình', sc.type),
                   InfoRow('Địa điểm', sc.location),
                   InfoRow('Phạm vi', sc.scope),

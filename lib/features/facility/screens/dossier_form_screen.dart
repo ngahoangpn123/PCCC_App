@@ -25,9 +25,15 @@ class _DossierFormScreenState extends State<DossierFormScreen> {
   late final _note = TextEditingController(text: widget.dossier?.note ?? '');
   late DateTime? _due = widget.dossier?.dueDate;
   late String? _formCode = widget.dossier?.formCode ?? widget.presetFormCode;
+  late String _retention = widget.dossier?.retention ?? '05 năm';
   List<FormTemplate> _templates = [];
 
   bool get _isEdit => widget.dossier != null;
+
+  String _templateRetention(String code) {
+    final r = _templates.where((t) => t.code == code).firstOrNull?.retention ?? '05 năm';
+    return retentionOptions.contains(r) ? r : '05 năm';
+  }
 
   @override
   void initState() {
@@ -37,6 +43,7 @@ class _DossierFormScreenState extends State<DossierFormScreen> {
       setState(() {
         _templates = list;
         _formCode ??= list.first.code;
+        if (widget.dossier == null) _retention = _templateRetention(_formCode!);
       });
     });
   }
@@ -70,6 +77,7 @@ class _DossierFormScreenState extends State<DossierFormScreen> {
       ..owner = _owner.text.trim()
       ..note = _note.text.trim()
       ..dueDate = _due
+      ..retention = _retention
       ..updatedAt = now;
     if (_isEdit) {
       d.history.add(HistoryEntry(time: now, actor: 'Bạn', action: 'Cập nhật nội dung'));
@@ -99,8 +107,14 @@ class _DossierFormScreenState extends State<DossierFormScreen> {
                     label: 'Biểu mẫu',
                     value: _formCode ?? _templates.first.code,
                     items: _templates.map((t) => t.code).toList(),
-                    labelOf: (c) => c,
-                    onChanged: (v) => setState(() => _formCode = v),
+                    labelOf: (c) {
+                      final t = _templates.firstWhere((t) => t.code == c);
+                      return '$c – ${t.name}';
+                    },
+                    onChanged: (v) => setState(() {
+                      _formCode = v;
+                      if (!_isEdit) _retention = _templateRetention(v);
+                    }),
                   ),
                   AppTextField(label: 'Tên hồ sơ', controller: _title, required: true),
                   AppTextField(label: 'Người phụ trách', controller: _owner, required: true),
@@ -108,6 +122,14 @@ class _DossierFormScreenState extends State<DossierFormScreen> {
                     label: 'Ngày đến hạn',
                     value: _due,
                     onChanged: (v) => setState(() => _due = v),
+                  ),
+                  DropdownField<String>(
+                    key: ValueKey(_retention),
+                    label: 'Thời hạn lưu trữ',
+                    value: _retention,
+                    items: retentionOptions,
+                    labelOf: (r) => r,
+                    onChanged: (v) => setState(() => _retention = v),
                   ),
                   AppTextField(label: 'Ghi chú', controller: _note, maxLines: 3),
                   const Text(

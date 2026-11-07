@@ -24,6 +24,9 @@ class FormTemplateDetailScreen extends StatelessWidget {
             children: [
               InfoRow('Mã biểu mẫu', template.code),
               InfoRow('Mục đích', template.purpose),
+              InfoRow('Căn cứ', template.source),
+              InfoRow('Thời hạn lưu trữ', template.retention),
+              if (template.isNew) const InfoRow('Ghi chú', 'Mẫu mới / thay thế từ 15/9/2026'),
             ],
           ),
           const SizedBox(height: 12),

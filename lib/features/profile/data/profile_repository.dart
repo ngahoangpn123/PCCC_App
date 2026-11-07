@@ -10,6 +10,8 @@ abstract class ProfileRepository {
   Future<List<ActivityLog>> getActivityLogs();
   Future<NotificationSettings> getSettings();
   Future<void> saveSettings(NotificationSettings settings);
+  Future<SignatureSettings> getSignature();
+  Future<void> saveSignature(SignatureSettings s);
 }
 
 class MockProfileRepository implements ProfileRepository {
@@ -48,6 +50,12 @@ class MockProfileRepository implements ProfileRepository {
 
   @override
   Future<void> saveSettings(NotificationSettings settings) => mockDelay(null);
+
+  @override
+  Future<SignatureSettings> getSignature() => mockDelay(_db.signature);
+
+  @override
+  Future<void> saveSignature(SignatureSettings s) => mockDelay(null);
 }
 
 class SupabaseProfileRepository implements ProfileRepository {

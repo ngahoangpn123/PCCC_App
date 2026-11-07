@@ -10,7 +10,8 @@ abstract class NotificationRepository {
 
   /// Đánh dấu đã xử lý. Khi có backend, việc này nên do hệ thống tự làm
   /// khi điều kiện hoàn thành được đáp ứng (vd: thiết bị đã sửa xong).
-  Future<void> markResolved(String id);
+  /// [resultNote] kết quả xử lý, [evidence] minh chứng (bắt buộc ở giao diện).
+  Future<void> markResolved(String id, {String resultNote = '', List<String> evidence = const []});
 }
 
 class MockNotificationRepository implements NotificationRepository {
@@ -46,9 +47,11 @@ class MockNotificationRepository implements NotificationRepository {
   }
 
   @override
-  Future<void> markResolved(String id) async {
+  Future<void> markResolved(String id, {String resultNote = '', List<String> evidence = const []}) async {
     final n = _db.notifications.firstWhere((n) => n.id == id);
     n.resolved = true;
+    n.resultNote = resultNote;
+    n.evidence.addAll(evidence);
     n.read = true;
     await mockDelay(null);
   }

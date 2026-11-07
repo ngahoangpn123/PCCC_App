@@ -5,6 +5,7 @@ import '../../../core/theme/app_colors.dart';
 import '../../../core/utils/ui_helpers.dart';
 import '../../../core/widgets/async_body.dart';
 import '../../../core/widgets/form_fields.dart';
+import '../../../core/legal/legal_catalog.dart';
 import '../models/equipment.dart';
 
 /// Quy trình kiểm tra thiết bị: checklist → kết quả → ảnh minh chứng → lưu.
@@ -30,7 +31,8 @@ class _InspectionScreenState extends State<InspectionScreen> {
   static const _kinds = ['Kiểm tra', 'Bảo dưỡng', 'Sửa chữa'];
 
   /// Checklist mẫu theo loại thiết bị.
-  /// TODO: thay bằng checklist chuẩn theo quy định cho từng loại.
+  /// TODO: thay bằng nội dung chuẩn của 16 bảng kiểm tra HT1–HT16
+  /// (Phụ lục IV CV 3038/C07) cho từng nhóm.
   List<String> _checklistFor(String type) {
     if (type == 'Bình chữa cháy') {
       return [
@@ -118,7 +120,7 @@ class _InspectionScreenState extends State<InspectionScreen> {
               ),
               Row(
                 children: [
-                  const Expanded(child: FormSectionTitle('Checklist kiểm tra')),
+                  Expanded(child: FormSectionTitle('Checklist ${e.htGroup} – ${htName(e.htGroup)}')),
                   Text('$passed/${items.length} đạt',
                       style: const TextStyle(fontWeight: FontWeight.w600)),
                 ],

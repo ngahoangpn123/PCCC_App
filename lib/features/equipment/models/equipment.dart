@@ -79,6 +79,8 @@ class Equipment {
     required this.status,
     required this.nextCheck,
     required this.keeper,
+    this.htGroup = 'HT12',
+    this.pc24Code = '',
     List<InspectionRecord>? records,
   }) : records = records ?? [];
 
@@ -96,5 +98,7 @@ class Equipment {
   EquipmentStatus status;
   DateTime nextCheck;
   String keeper; // người phụ trách
+  String htGroup; // nhóm theo 16 bảng HT1–HT16
+  String pc24Code; // mã tờ khai thông tin phương tiện lưu thông Mẫu PC24
   final List<InspectionRecord> records;
 }

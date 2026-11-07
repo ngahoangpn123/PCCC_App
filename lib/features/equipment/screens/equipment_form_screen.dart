@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../../core/di/locator.dart';
 import '../../../core/utils/ui_helpers.dart';
 import '../../../core/widgets/form_fields.dart';
+import '../../../core/legal/legal_catalog.dart';
 import '../models/equipment.dart';
 
 class EquipmentFormScreen extends StatefulWidget {
@@ -26,6 +27,8 @@ class _EquipmentFormScreenState extends State<EquipmentFormScreen> {
   late final _location = TextEditingController(text: widget.item?.location ?? '');
   late final _keeper = TextEditingController(text: widget.item?.keeper ?? '');
   late String _type = widget.item?.type ?? equipmentTypes.first;
+  late String _ht = widget.item?.htGroup ?? 'HT12';
+  late final _pc24 = TextEditingController(text: widget.item?.pc24Code ?? '');
   late EquipmentStatus _status = widget.item?.status ?? EquipmentStatus.ok;
   late DateTime _inUseSince = widget.item?.inUseSince ?? DateTime.now();
   late DateTime _nextCheck =
@@ -35,7 +38,7 @@ class _EquipmentFormScreenState extends State<EquipmentFormScreen> {
 
   @override
   void dispose() {
-    for (final c in [_code, _name, _maker, _model, _serial, _quantity, _unit, _location, _keeper]) {
+    for (final c in [_code, _name, _maker, _model, _serial, _quantity, _unit, _location, _keeper, _pc24]) {
       c.dispose();
     }
     super.dispose();
@@ -68,6 +71,8 @@ class _EquipmentFormScreenState extends State<EquipmentFormScreen> {
       ..unit = _unit.text.trim()
       ..location = _location.text.trim()
       ..keeper = _keeper.text.trim()
+      ..htGroup = _ht
+      ..pc24Code = _pc24.text.trim()
       ..status = _status
       ..inUseSince = _inUseSince
       ..nextCheck = _nextCheck;
@@ -96,6 +101,18 @@ class _EquipmentFormScreenState extends State<EquipmentFormScreen> {
               items: equipmentTypes,
               labelOf: (v) => v,
               onChanged: (v) => setState(() => _type = v),
+            ),
+            DropdownField<String>(
+              label: 'Nhóm hệ thống (bảng kiểm tra HT)',
+              value: _ht,
+              items: htTables.map((h) => h.code).toList(),
+              labelOf: htLabel,
+              onChanged: (v) => setState(() => _ht = v),
+            ),
+            AppTextField(
+              label: 'Mã tờ khai PC24 (nếu có)',
+              controller: _pc24,
+              hint: 'Tờ khai thông tin phương tiện PCCC lưu thông trên thị trường',
             ),
             AppTextField(label: 'Hãng sản xuất', controller: _maker),
             AppTextField(label: 'Model', controller: _model),

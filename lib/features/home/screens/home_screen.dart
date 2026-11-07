@@ -7,21 +7,21 @@ import '../../../core/utils/formatters.dart';
 import '../../../core/utils/ui_helpers.dart';
 import '../../../core/widgets/async_body.dart';
 import '../../../core/widgets/section_header.dart';
-import '../../../core/widgets/stat_card.dart';
 import '../../../core/widgets/status_chip.dart';
+import '../../acceptance/models/acceptance.dart';
+import '../../acceptance/screens/acceptance_hub_screen.dart';
+import '../../acceptance/screens/pc01_declaration_screen.dart';
 import '../../calendar/models/calendar_event.dart';
 import '../../calendar/screens/calendar_screen.dart';
-import '../../drills/screens/drill_hub_screen.dart';
 import '../../equipment/models/equipment.dart';
-import '../../equipment/screens/equipment_list_screen.dart';
 import '../../equipment/screens/qr_scan_screen.dart';
-import '../../facility/models/dossier.dart';
-import '../../facility/screens/facility_hub_screen.dart';
+import '../../facility/screens/dossier_form_screen.dart';
+import '../../management/management_modules.dart';
 import '../../notifications/models/app_notification.dart';
 import '../../notifications/notification_router.dart';
 import '../../profile/screens/facility_switch_screen.dart';
-import '../../team/screens/team_hub_screen.dart';
-import '../../training/screens/training_hub_screen.dart';
+import '../../team/screens/shift_form_screen.dart';
+import '../../training/screens/training_session_form_screen.dart';
 
 class _HomeData {
   _HomeData({
@@ -31,6 +31,10 @@ class _HomeData {
     required this.shiftsToday,
     required this.urgent,
     required this.upcoming,
+    required this.acceptance,
+    required this.needsAcceptance,
+    required this.pc01,
+    required this.readiness,
   });
 
   final String userName;
@@ -39,6 +43,14 @@ class _HomeData {
   final int shiftsToday;
   final List<AppNotification> urgent;
   final List<CalendarEvent> upcoming;
+  final ProjectAcceptance? acceptance;
+  final bool needsAcceptance; // cơ sở đang thi công / cải tạo
+  final Pc01Declaration pc01;
+  final ReadinessSummary readiness;
+
+  int get todoCount => urgent.length + dossierTodo + equipmentDue;
+
+  bool get pc18Missing => needsAcceptance && !(acceptance?.pc18Signed ?? false);
 }
 
 class HomeScreen extends StatefulWidget {
@@ -67,6 +79,10 @@ class _HomeScreenState extends State<HomeScreen> {
     final shifts = await Locator.team.getShifts();
     final notifications = await Locator.notifications.getNotifications();
     final events = await Locator.calendar.getEvents();
+    final facility = await Locator.facility.getFacility(AppSession.instance.currentFacilityId);
+    final acceptance = await Locator.acceptance.getAcceptance();
+    final pc01 = await Locator.acceptance.getPc01();
+    final readiness = await Locator.acceptance.getReadinessSummary();
 
     final today = DateTime.now();
     return _HomeData(
@@ -88,6 +104,10 @@ class _HomeScreenState extends State<HomeScreen> {
         final d = daysFromToday(e.date);
         return d >= 0 && d <= 7;
       }).toList(),
+      acceptance: acceptance,
+      needsAcceptance: facility.hasConstruction,
+      pc01: pc01,
+      readiness: readiness,
     );
   }
 
@@ -104,11 +124,66 @@ class _HomeScreenState extends State<HomeScreen> {
             padding: EdgeInsets.zero,
             children: [
               _Header(userName: data.userName, onBell: () => widget.onOpenTab(3)),
-              _buildStats(data),
-              SectionHeader(
-                'Cần xử lý ngay',
-                actionLabel: 'Tất cả',
-                onAction: () => widget.onOpenTab(3),
+              _LegalStatusBar(
+                data: data,
+                onTap: () async {
+                  await pushScreen(context, const AcceptanceHubScreen());
+                  _reload();
+                },
+                onPc01: () async {
+                  await pushScreen(context, const Pc01DeclarationScreen());
+                  _reload();
+                },
+              ),
+              if (data.pc18Missing)
+                _Pc18Banner(
+                  acceptance: data.acceptance,
+                  onTap: () async {
+                    await pushScreen(context, const AcceptanceHubScreen());
+                    _reload();
+                  },
+                ),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
+                child: FilledButton.icon(
+                  style: FilledButton.styleFrom(minimumSize: const Size.fromHeight(48)),
+                  onPressed: _openCreateSheet,
+                  icon: const Icon(Icons.add),
+                  label: const Text('Tạo nhiệm vụ mới / Khởi tạo tự nghiệm thu'),
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 20, 8, 8),
+                child: Row(
+                  children: [
+                    const Text(
+                      'Cần xử lý ngay',
+                      style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
+                    ),
+                    const SizedBox(width: 8),
+                    if (data.todoCount > 0)
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                        decoration: BoxDecoration(
+                          color: AppColors.danger,
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        child: Text(
+                          '${data.todoCount}',
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 12,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                      ),
+                    const Spacer(),
+                    TextButton(
+                      onPressed: () => widget.onOpenTab(3),
+                      child: const Text('Xem tất cả công việc'),
+                    ),
+                  ],
+                ),
               ),
               if (data.urgent.isEmpty)
                 const Padding(
@@ -118,7 +193,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     style: TextStyle(color: AppColors.textSecondary),
                   ),
                 ),
-              for (final n in data.urgent.take(3))
+              for (final n in data.urgent.take(4))
                 Padding(
                   padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
                   child: _UrgentTile(
@@ -129,6 +204,20 @@ class _HomeScreenState extends State<HomeScreen> {
                     },
                   ),
                 ),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 4, 16, 0),
+                child: Wrap(
+                  spacing: 8,
+                  runSpacing: 6,
+                  children: [
+                    _MiniCount('Hồ sơ cần xử lý', data.dossierTodo, AppColors.info),
+                    _MiniCount('Thiết bị cần kiểm tra', data.equipmentDue, AppColors.warning),
+                    _MiniCount('Ca trực hôm nay', data.shiftsToday, AppColors.primary),
+                  ],
+                ),
+              ),
+              const SectionHeader('Danh mục quản lý'),
+              _buildModules(),
               SectionHeader(
                 'Sắp diễn ra (7 ngày tới)',
                 actionLabel: 'Mở lịch',
@@ -154,8 +243,6 @@ class _HomeScreenState extends State<HomeScreen> {
                     },
                   ),
                 ),
-              const SectionHeader('Truy cập nhanh'),
-              _buildQuickActions(),
               const SizedBox(height: 24),
             ],
           ),
@@ -164,59 +251,43 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Widget _buildStats(_HomeData data) {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
-      child: GridView.count(
-        crossAxisCount: 2,
-        shrinkWrap: true,
-        physics: const NeverScrollableScrollPhysics(),
-        mainAxisSpacing: 10,
-        crossAxisSpacing: 10,
-        childAspectRatio: 1.45,
-        children: [
-          StatCard(
-            icon: Icons.description_outlined,
-            label: 'Hồ sơ cần xử lý',
-            value: '${data.dossierTodo}',
-            color: AppColors.info,
-            onTap: () => pushScreen(context, const FacilityHubScreen(initialTab: 2)),
-          ),
-          StatCard(
-            icon: Icons.fire_extinguisher,
-            label: 'Thiết bị cần kiểm tra / sửa',
-            value: '${data.equipmentDue}',
-            color: AppColors.warning,
-            onTap: () => pushScreen(context, const EquipmentListScreen()),
-          ),
-          StatCard(
-            icon: Icons.shield_outlined,
-            label: 'Ca trực hôm nay',
-            value: '${data.shiftsToday}',
-            color: AppColors.primary,
-            onTap: () => pushScreen(context, const TeamHubScreen(initialTab: 1)),
-          ),
-          StatCard(
-            icon: Icons.warning_amber_rounded,
-            label: 'Cảnh báo ưu tiên cao',
-            value: '${data.urgent.length}',
-            color: AppColors.danger,
-            onTap: () => widget.onOpenTab(3),
-          ),
-        ],
+  Future<void> _openCreateSheet() async {
+    final items = <(IconData, String, Widget Function())>[
+      (Icons.fact_check_outlined, 'Khởi tạo tự nghiệm thu (PC18)', () => const AcceptanceHubScreen()),
+      (Icons.description_outlined, 'Tạo hồ sơ theo biểu mẫu', () => const DossierFormScreen()),
+      (Icons.checklist, 'Lập biên bản tự kiểm tra PC02',
+          () => const DossierFormScreen(presetFormCode: 'PC02')),
+      (Icons.shield_outlined, 'Phân công ca trực', () => const ShiftFormScreen()),
+      (Icons.school_outlined, 'Lên lịch huấn luyện', () => const TrainingSessionFormScreen()),
+      (Icons.qr_code_scanner, 'Quét QR kiểm tra thiết bị', () => const QrScanScreen()),
+    ];
+    final picked = await showModalBottomSheet<Widget Function()>(
+      context: context,
+      showDragHandle: true,
+      builder: (c) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Padding(
+              padding: EdgeInsets.fromLTRB(16, 0, 16, 8),
+              child: Text('Tạo mới', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700)),
+            ),
+            for (final (icon, label, builder) in items)
+              ListTile(
+                leading: Icon(icon, color: AppColors.primary),
+                title: Text(label),
+                onTap: () => Navigator.pop(c, builder),
+              ),
+          ],
+        ),
       ),
     );
+    if (picked == null || !mounted) return;
+    await pushScreen(context, picked());
+    _reload();
   }
 
-  Widget _buildQuickActions() {
-    final actions = <(IconData, String, Widget)>[
-      (Icons.business_outlined, 'Hồ sơ cơ sở', const FacilityHubScreen()),
-      (Icons.groups_outlined, 'Đội PCCC', const TeamHubScreen()),
-      (Icons.fire_extinguisher, 'Thiết bị', const EquipmentListScreen()),
-      (Icons.school_outlined, 'Huấn luyện', const TrainingHubScreen()),
-      (Icons.local_fire_department_outlined, 'Diễn tập', const DrillHubScreen()),
-      (Icons.qr_code_scanner, 'Quét QR kiểm tra', const QrScanScreen()),
-    ];
+  Widget _buildModules() {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16),
       child: GridView.count(
@@ -225,14 +296,15 @@ class _HomeScreenState extends State<HomeScreen> {
         physics: const NeverScrollableScrollPhysics(),
         mainAxisSpacing: 10,
         crossAxisSpacing: 10,
-        childAspectRatio: 1.05,
+        childAspectRatio: 0.95,
         children: [
-          for (final a in actions)
+          for (final m in managementModules)
             Card(
               clipBehavior: Clip.antiAlias,
+              color: m.highlight ? AppColors.primary : null,
               child: InkWell(
                 onTap: () async {
-                  await pushScreen(context, a.$3);
+                  await pushScreen(context, m.builder());
                   _reload();
                 },
                 child: Padding(
@@ -240,14 +312,16 @@ class _HomeScreenState extends State<HomeScreen> {
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Icon(a.$1, color: AppColors.primary, size: 28),
+                      Icon(m.icon, color: m.highlight ? Colors.white : AppColors.primary, size: 28),
                       const SizedBox(height: 8),
                       Text(
-                        a.$2,
+                        m.title,
                         textAlign: TextAlign.center,
-                        style: const TextStyle(
+                        maxLines: 2,
+                        style: TextStyle(
                           fontSize: 12,
                           fontWeight: FontWeight.w600,
+                          color: m.highlight ? Colors.white : null,
                         ),
                       ),
                     ],
@@ -255,10 +329,168 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
               ),
             ),
+          Card(
+            clipBehavior: Clip.antiAlias,
+            child: InkWell(
+              onTap: () => pushScreen(context, const QrScanScreen()),
+              child: const Padding(
+                padding: EdgeInsets.all(8),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(Icons.qr_code_scanner, color: AppColors.primary, size: 28),
+                    SizedBox(height: 8),
+                    Text(
+                      'Quét QR kiểm tra',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+          Card(
+            clipBehavior: Clip.antiAlias,
+            child: InkWell(
+              onTap: () => widget.onOpenTab(2),
+              child: const Padding(
+                padding: EdgeInsets.all(8),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(Icons.calendar_month_outlined, color: AppColors.primary, size: 28),
+                    SizedBox(height: 8),
+                    Text(
+                      'Lịch hoạt động',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
         ],
       ),
     );
   }
+}
+
+/// Thanh trạng thái pháp lý: PC18 · PC01 · Điểm sẵn sàng hậu kiểm.
+class _LegalStatusBar extends StatelessWidget {
+  const _LegalStatusBar({required this.data, required this.onTap, required this.onPc01});
+
+  final _HomeData data;
+  final VoidCallback onTap;
+  final VoidCallback onPc01;
+
+  @override
+  Widget build(BuildContext context) {
+    final acc = data.acceptance;
+    final (pc18Text, pc18Color) = !data.needsAcceptance && acc == null
+        ? ('Không áp dụng', AppColors.neutral)
+        : acc?.synced == true
+            ? ('Đã khai báo', AppColors.success)
+            : acc?.pc18Signed == true
+                ? ('Đã ký', AppColors.info)
+                : ('Bước ${acc?.doneSteps ?? 0}/6', AppColors.danger);
+    final score = data.readiness.score;
+    final scoreColor = score >= 90
+        ? AppColors.success
+        : score >= 70
+            ? AppColors.warning
+            : AppColors.danger;
+    Widget cell(String label, String value, Color color, VoidCallback onTap) => Expanded(
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(10),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 4),
+          child: Column(
+            children: [
+              Text(label, style: const TextStyle(fontSize: 11.5, color: AppColors.textSecondary)),
+              const SizedBox(height: 4),
+              Text(
+                value,
+                textAlign: TextAlign.center,
+                style: TextStyle(fontWeight: FontWeight.w800, color: color, fontSize: 13.5),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
+      child: Card(
+        child: Padding(
+          padding: const EdgeInsets.all(4),
+          child: Row(
+            children: [
+              cell('Nghiệm thu PC18', pc18Text, pc18Color, onTap),
+              const SizedBox(height: 36, child: VerticalDivider()),
+              cell('Khai báo PC01', data.pc01.status.label, data.pc01.status.color, onPc01),
+              const SizedBox(height: 36, child: VerticalDivider()),
+              cell('Sẵn sàng hậu kiểm', '$score%', scoreColor, onTap),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _Pc18Banner extends StatelessWidget {
+  const _Pc18Banner({required this.acceptance, required this.onTap});
+
+  final ProjectAcceptance? acceptance;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+      child: Material(
+        color: AppColors.danger,
+        borderRadius: BorderRadius.circular(12),
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(12),
+          child: Padding(
+            padding: const EdgeInsets.all(12),
+            child: Row(
+              children: [
+                const Icon(Icons.gpp_maybe_outlined, color: Colors.white),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Text(
+                    acceptance == null
+                        ? 'Cơ sở đang thi công / cải tạo nhưng chưa khởi tạo tự nghiệm thu PC18.'
+                        : 'Chưa hoàn thành tự nghiệm thu PC18 – chưa được đưa '
+                            '"${acceptance!.projectName}" vào sử dụng.',
+                    style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w600),
+                  ),
+                ),
+                const Icon(Icons.chevron_right, color: Colors.white),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _MiniCount extends StatelessWidget {
+  const _MiniCount(this.label, this.count, this.color);
+
+  final String label;
+  final int count;
+  final Color color;
+
+  @override
+  Widget build(BuildContext context) => StatusChip(label: '$label: $count', color: color);
 }
 
 class _Header extends StatelessWidget {

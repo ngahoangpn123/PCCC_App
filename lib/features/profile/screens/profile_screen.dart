@@ -15,6 +15,7 @@ import 'facility_switch_screen.dart';
 import 'help_screen.dart';
 import 'notification_settings_screen.dart';
 import 'security_screen.dart';
+import 'signature_screen.dart';
 
 /// Tab "Cá nhân".
 class ProfileScreen extends StatefulWidget {
@@ -100,8 +101,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       () => _open(const DelegationScreen())),
                   _MenuTile(Icons.notifications_active_outlined, 'Cài đặt thông báo',
                       () => _open(const NotificationSettingsScreen())),
+                  _MenuTile(Icons.draw_outlined, 'Chữ ký số', () => _open(const SignatureScreen())),
                   _MenuTile(Icons.lock_outline, 'Bảo mật & đăng nhập', () => _open(const SecurityScreen())),
-                  _MenuTile(Icons.history, 'Nhật ký hoạt động', () => _open(const ActivityLogScreen())),
+                  _MenuTile(Icons.history, 'Nhật ký hoạt động (Audit Log)', () => _open(const ActivityLogScreen())),
                   _MenuTile(Icons.help_outline, 'Hướng dẫn, hỗ trợ & phản hồi', () => _open(const HelpScreen()),
                       showDivider: false),
                 ],

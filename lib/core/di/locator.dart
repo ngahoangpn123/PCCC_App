@@ -1,3 +1,4 @@
+import '../../features/acceptance/data/acceptance_repository.dart';
 import '../../features/auth/data/auth_repository.dart';
 import '../../features/calendar/data/calendar_repository.dart';
 import '../../features/drills/data/drill_repository.dart';
@@ -25,4 +26,5 @@ class Locator {
   static final NotificationRepository notifications = MockNotificationRepository();
   static final CalendarRepository calendar = MockCalendarRepository();
   static final ProfileRepository profile = MockProfileRepository();
+  static final AcceptanceRepository acceptance = MockAcceptanceRepository();
 }

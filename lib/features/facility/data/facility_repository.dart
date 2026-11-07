@@ -1,4 +1,5 @@
 import '../../../core/mock/mock_database.dart';
+import '../../acceptance/models/acceptance.dart';
 import '../models/dossier.dart';
 import '../models/facility.dart';
 import '../models/form_template.dart';
@@ -30,7 +31,17 @@ class MockFacilityRepository implements FacilityRepository {
 
   @override
   Future<void> saveFacility(Facility facility) async {
-    if (!_db.facilities.contains(facility)) _db.facilities.add(facility);
+    if (!_db.facilities.contains(facility)) {
+      _db.facilities.add(facility);
+    } else {
+      // Thông tin cơ sở thay đổi → phải cập nhật PC01 trong 72 giờ.
+      final pc01 = _db.pc01For(facility.id);
+      if (pc01.status == DeclarationStatus.synced || pc01.status == DeclarationStatus.needUpdate) {
+        pc01.status = DeclarationStatus.needUpdate;
+        pc01.changedAt ??= DateTime.now();
+        if (!pc01.changes.contains('Cập nhật hồ sơ cơ sở')) pc01.changes.add('Cập nhật hồ sơ cơ sở');
+      }
+    }
     await mockDelay(null);
   }
 

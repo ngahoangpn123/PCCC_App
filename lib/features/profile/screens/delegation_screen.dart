@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../core/di/locator.dart';
+import '../../../core/legal/legal_catalog.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/utils/ui_helpers.dart';
 import '../../../core/widgets/async_body.dart';
@@ -19,13 +20,7 @@ class DelegationScreen extends StatefulWidget {
 class _DelegationScreenState extends State<DelegationScreen> {
   late Future<List<DelegatedUser>> _future = Locator.profile.getDelegates();
 
-  // Quyền chính của từng vai trò (theo tài liệu thiết kế).
-  static const _rolePermissions = {
-    'Cán bộ phụ trách PCCC & CNCH': 'Cập nhật hồ sơ, lập kế hoạch, theo dõi công việc',
-    'Đội trưởng đội PCCC & CNCH': 'Quản lý thành viên, lịch trực, huấn luyện',
-    'Người phụ trách thiết bị': 'Kiểm tra, cập nhật tình trạng, bảo dưỡng thiết bị',
-    'Người được giao nhiệm vụ': 'Xem và cập nhật tiến độ nhiệm vụ được giao',
-  };
+  // Quyền của 7 vai trò (RBAC) lấy từ bản đặc tả – xem userRoles.
 
   void _reload() => setState(() => _future = Locator.profile.getDelegates());
 
@@ -130,11 +125,15 @@ class _DelegationScreenState extends State<DelegationScreen> {
             Card(
               child: Column(
                 children: [
-                  for (final e in _rolePermissions.entries)
+                  for (final r in userRoles)
                     ListTile(
                       dense: true,
-                      title: Text(e.key, style: const TextStyle(fontWeight: FontWeight.w600)),
-                      subtitle: Text(e.value),
+                      leading: CircleAvatar(
+                        radius: 14,
+                        child: Text(r.code.substring(1), style: const TextStyle(fontSize: 12)),
+                      ),
+                      title: Text(r.name, style: const TextStyle(fontWeight: FontWeight.w600)),
+                      subtitle: Text(r.detail),
                     ),
                 ],
               ),

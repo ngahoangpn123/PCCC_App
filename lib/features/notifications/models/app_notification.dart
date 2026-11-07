@@ -2,12 +2,12 @@ import 'package:flutter/material.dart';
 
 import '../../../core/theme/app_colors.dart';
 
-/// 4 nhóm thông báo theo tài liệu thiết kế.
+/// 4 nhóm thông báo theo bản đặc tả (mục Thông báo & cảnh báo).
 enum NotifCategory {
-  urgent('Khẩn cấp', AppColors.danger, Icons.warning_amber_rounded),
-  upcoming('Sắp đến hạn', AppColors.warning, Icons.schedule),
-  dossier('Hồ sơ & thủ tục', AppColors.info, Icons.description_outlined),
-  schedule('Lịch & phân công', AppColors.gold, Icons.event_note_outlined);
+  urgent('Khẩn cấp / cần xử lý ngay', AppColors.danger, Icons.warning_amber_rounded),
+  upcoming('Nhiệm vụ sắp đến hạn / quá hạn', AppColors.warning, Icons.schedule),
+  dossier('Hồ sơ & tài liệu', AppColors.info, Icons.description_outlined),
+  schedule('Lịch hoạt động', AppColors.gold, Icons.event_note_outlined);
 
   const NotifCategory(this.label, this.color, this.icon);
   final String label;
@@ -26,7 +26,7 @@ enum NotifPriority {
 }
 
 /// Thông báo trỏ tới đối tượng nào (để mở đúng màn hình).
-enum NotifTarget { none, dossier, equipment, shift, training, drill, member }
+enum NotifTarget { none, dossier, equipment, shift, training, drill, member, acceptance }
 
 class AppNotification {
   AppNotification({
@@ -40,7 +40,13 @@ class AppNotification {
     this.targetId = '',
     this.read = false,
     this.resolved = false,
-  });
+    this.objectLabel = '',
+    this.dueDate,
+    this.assignee = '',
+    this.suggestedAction = '',
+    this.resultNote = '',
+    List<String>? evidence,
+  }) : evidence = evidence ?? [];
 
   final String id;
   final String title;
@@ -52,4 +58,14 @@ class AppNotification {
   final String targetId;
   bool read; // đã đọc
   bool resolved; // đã xử lý (khác với đã đọc)
+
+  // Thông tin hiển thị trên thẻ (Hình 7 của bản đặc tả)
+  final String objectLabel; // đối tượng liên quan
+  final DateTime? dueDate; // thời hạn xử lý
+  final String assignee; // người chịu trách nhiệm
+  final String suggestedAction; // hành động đề xuất
+
+  // Khi đánh dấu "đã xử lý" phải có kết quả + minh chứng
+  String resultNote;
+  final List<String> evidence;
 }

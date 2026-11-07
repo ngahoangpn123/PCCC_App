@@ -5,6 +5,8 @@ import '../../../core/theme/app_colors.dart';
 import '../../../core/utils/formatters.dart';
 import '../../../core/utils/ui_helpers.dart';
 import '../../../core/widgets/async_body.dart';
+import '../../acceptance/screens/acceptance_hub_screen.dart';
+import '../../acceptance/screens/readiness_screen.dart';
 import '../../drills/screens/drill_detail_screen.dart';
 import '../../equipment/screens/equipment_detail_screen.dart';
 import '../../facility/screens/dossier_detail_screen.dart';
@@ -21,6 +23,8 @@ Future<void> openEventTarget(BuildContext context, CalendarEvent e) {
     EventKind.drill => DrillDetailScreen(drillId: e.refId),
     EventKind.maintenance => EquipmentDetailScreen(equipmentId: e.refId),
     EventKind.deadline => DossierDetailScreen(dossierId: e.refId),
+    EventKind.acceptance => const AcceptanceHubScreen(),
+    EventKind.selfCheck || EventKind.postInspection => const ReadinessScreen(),
   };
   return pushScreen(context, screen);
 }
@@ -45,7 +49,15 @@ class CalendarScreen extends StatelessWidget {
         body: const TabBarView(
           children: [
             _CalendarView(
-              kinds: [EventKind.training, EventKind.drill, EventKind.maintenance, EventKind.deadline],
+              kinds: [
+                EventKind.acceptance,
+                EventKind.selfCheck,
+                EventKind.postInspection,
+                EventKind.training,
+                EventKind.drill,
+                EventKind.maintenance,
+                EventKind.deadline,
+              ],
             ),
             _CalendarView(kinds: [EventKind.shift]),
           ],

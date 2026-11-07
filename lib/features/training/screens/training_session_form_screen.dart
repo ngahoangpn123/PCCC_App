@@ -28,6 +28,7 @@ class _TrainingSessionFormScreenState extends State<TrainingSessionFormScreen> {
       ? '08:00'
       : '${widget.session!.date.hour.toString().padLeft(2, '0')}:${widget.session!.date.minute.toString().padLeft(2, '0')}';
   late String _format = widget.session?.format ?? trainingFormats.last;
+  late String _kind = widget.session?.kind ?? sessionKinds.first;
   late String? _planId = widget.session?.planId ?? widget.presetPlanId;
   late final Set<String> _participants = {
     ...?widget.session?.attendance.map((a) => a.memberId),
@@ -92,6 +93,7 @@ class _TrainingSessionFormScreenState extends State<TrainingSessionFormScreen> {
       ..instructor = _instructor.text.trim()
       ..content = _content.text.trim()
       ..format = _format
+      ..kind = _kind
       ..durationMinutes = int.tryParse(_duration.text.trim()) ?? 90;
     // Đồng bộ danh sách tham gia, giữ nguyên kết quả của người đã có.
     s.attendance.removeWhere((a) => !_participants.contains(a.memberId));
@@ -152,6 +154,13 @@ class _TrainingSessionFormScreenState extends State<TrainingSessionFormScreen> {
                   ),
                   AppTextField(label: 'Địa điểm', controller: _location, required: true),
                   AppTextField(label: 'Người hướng dẫn', controller: _instructor),
+                  DropdownField<String>(
+                    label: 'Loại (tính giờ theo Điều 22 NĐ 347/2026)',
+                    value: _kind,
+                    items: sessionKinds,
+                    labelOf: (v) => v,
+                    onChanged: (v) => setState(() => _kind = v),
+                  ),
                   DropdownField<String>(
                     label: 'Hình thức',
                     value: _format,

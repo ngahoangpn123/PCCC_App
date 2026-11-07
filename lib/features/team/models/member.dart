@@ -14,7 +14,7 @@ enum MemberStatus {
   final Color color;
 }
 
-const memberRoles = ['Đội trưởng', 'Đội phó', 'Đội viên'];
+const memberRoles = ['Đội trưởng', 'Đội phó', 'Đội viên', 'Lái xe chữa cháy'];
 
 /// Thành viên đội PCCC & CNCH cơ sở.
 class Member {

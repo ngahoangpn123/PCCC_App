@@ -25,7 +25,7 @@ class _FormLibraryTabState extends State<FormLibraryTab> {
   String _query = '';
   String _filter = 'Tất cả';
 
-  static const _filters = ['Tất cả', 'Đã có hồ sơ', 'Chưa có hồ sơ'];
+  static const _filters = ['Tất cả', 'Mẫu PC (NĐ 105)', 'Mẫu TT 36', 'Mẫu mới', 'Đã có hồ sơ', 'Chưa có hồ sơ'];
 
   @override
   void initState() {
@@ -61,7 +61,10 @@ class _FormLibraryTabState extends State<FormLibraryTab> {
           final has = _latestFor(t.code, dossiers) != null;
           final passFilter = _filter == 'Tất cả' ||
               (_filter == 'Đã có hồ sơ' && has) ||
-              (_filter == 'Chưa có hồ sơ' && !has);
+              (_filter == 'Chưa có hồ sơ' && !has) ||
+              (_filter == 'Mẫu PC (NĐ 105)' && t.code.startsWith('PC')) ||
+              (_filter == 'Mẫu TT 36' && t.code.startsWith('TT36')) ||
+              (_filter == 'Mẫu mới' && t.isNew);
           return matches && passFilter;
         }).toList();
 
@@ -76,6 +79,19 @@ class _FormLibraryTabState extends State<FormLibraryTab> {
               selected: _filter,
               labelOf: (v) => v,
               onSelected: (v) => setState(() => _filter = v),
+            ),
+            Container(
+              width: double.infinity,
+              margin: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+              padding: const EdgeInsets.all(10),
+              decoration: BoxDecoration(
+                color: AppColors.goldLight,
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Text(
+                '${templates.length} mẫu đang áp dụng. Đã bãi bỏ: ${abolishedForms.join(', ')}.',
+                style: const TextStyle(fontSize: 12.5),
+              ),
             ),
             Expanded(
               child: visible.isEmpty
@@ -101,9 +117,22 @@ class _FormLibraryTabState extends State<FormLibraryTab> {
                               setState(() => _future = _load());
                             },
                             leading: _CodeBadge(t.code),
-                            title: Text(
-                              t.name,
-                              style: const TextStyle(fontWeight: FontWeight.w600),
+                            title: Text.rich(
+                              TextSpan(
+                                text: t.name,
+                                style: const TextStyle(fontWeight: FontWeight.w600),
+                                children: [
+                                  if (t.isNew)
+                                    const TextSpan(
+                                      text: '  MỚI',
+                                      style: TextStyle(
+                                        color: AppColors.danger,
+                                        fontSize: 11,
+                                        fontWeight: FontWeight.w800,
+                                      ),
+                                    ),
+                                ],
+                              ),
                             ),
                             subtitle: Padding(
                               padding: const EdgeInsets.only(top: 4),
@@ -146,7 +175,7 @@ class _CodeBadge extends StatelessWidget {
       ),
       alignment: Alignment.center,
       child: Text(
-        code,
+        code.startsWith('TT36-') ? code.substring(5) : code,
         style: const TextStyle(
           color: AppColors.primary,
           fontWeight: FontWeight.w800,

@@ -245,6 +245,16 @@ class _NotificationCard extends StatelessWidget {
                       overflow: TextOverflow.ellipsis,
                       style: const TextStyle(fontSize: 13, color: AppColors.textSecondary),
                     ),
+                    if (n.objectLabel.isNotEmpty || n.dueDate != null || n.assignee.isNotEmpty) ...[
+                      const SizedBox(height: 8),
+                      _Meta(Icons.inventory_2_outlined, n.objectLabel),
+                      if (n.dueDate != null)
+                        _Meta(Icons.event_outlined, 'Hạn: ${fmtDate(n.dueDate!)} (${dueText(n.dueDate!)})',
+                            color: dueColor(n.dueDate!)),
+                      _Meta(Icons.person_outline, n.assignee),
+                      if (n.suggestedAction.isNotEmpty && !n.resolved)
+                        _Meta(Icons.lightbulb_outline, n.suggestedAction, color: AppColors.primary),
+                    ],
                     const SizedBox(height: 8),
                     Wrap(
                       spacing: 6,
@@ -264,6 +274,30 @@ class _NotificationCard extends StatelessWidget {
             ],
           ),
         ),
+      ),
+    );
+  }
+}
+
+class _Meta extends StatelessWidget {
+  const _Meta(this.icon, this.text, {this.color});
+
+  final IconData icon;
+  final String text;
+  final Color? color;
+
+  @override
+  Widget build(BuildContext context) {
+    if (text.isEmpty) return const SizedBox.shrink();
+    final c = color ?? AppColors.textSecondary;
+    return Padding(
+      padding: const EdgeInsets.only(top: 2),
+      child: Row(
+        children: [
+          Icon(icon, size: 14, color: c),
+          const SizedBox(width: 6),
+          Expanded(child: Text(text, style: TextStyle(fontSize: 12.5, color: c))),
+        ],
       ),
     );
   }

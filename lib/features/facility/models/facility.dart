@@ -14,6 +14,12 @@ class Facility {
     required this.officerName,
     required this.officerPhone,
     required this.email,
+    this.staffCount = 0,
+    this.lat = 0,
+    this.lng = 0,
+    this.hazard = '',
+    this.managementLevel = 'Cơ quan Công an',
+    this.hasConstruction = false,
   });
 
   final String id;
@@ -29,6 +35,14 @@ class Facility {
   String officerName; // người phụ trách PCCC & CNCH
   String officerPhone;
   String email;
+  int staffCount; // số người thường xuyên làm việc (quyết định mô hình đội)
+  double lat; // vĩ độ
+  double lng; // kinh độ
+  String hazard; // đặc điểm nguy hiểm cháy nổ
+  String managementLevel; // phân cấp quản lý: Cơ quan Công an / UBND cấp xã
+  bool hasConstruction; // đang thi công mới, cải tạo, thay đổi công năng
+
+  bool get hasCoordinates => lat != 0 && lng != 0;
 }
 
 /// Danh sách loại hình cơ sở để chọn trong form.
@@ -36,11 +50,13 @@ class Facility {
 const facilityTypes = [
   'Trung tâm thương mại, chợ, siêu thị',
   'Nhà chung cư, nhà tập thể',
+  'Nhà hỗn hợp, văn phòng',
   'Cơ sở giáo dục',
   'Cơ sở y tế',
   'Khách sạn, nhà nghỉ',
-  'Văn phòng, trụ sở làm việc',
   'Nhà xưởng, cơ sở sản xuất',
   'Kho hàng hóa, vật tư',
   'Khác',
 ];
+
+const managementLevels = ['Cơ quan Công an', 'UBND cấp xã'];

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../core/di/locator.dart';
+import '../../../core/legal/legal_catalog.dart';
 import '../../../core/theme/app_colors.dart';
 import '../../../core/utils/formatters.dart';
 import '../../../core/utils/ui_helpers.dart';
@@ -134,13 +135,35 @@ class _EquipmentDetailScreenState extends State<EquipmentDetailScreen> {
                 title: 'Thông tin thiết bị',
                 icon: Icons.info_outline,
                 children: [
+                  InfoRow('Nhóm hệ thống', htLabel(e.htGroup)),
                   InfoRow('Loại', e.type),
+                  if (e.pc24Code.isNotEmpty) InfoRow('Tờ khai PC24', e.pc24Code),
                   InfoRow('Hãng sản xuất', e.maker),
                   InfoRow('Model', e.model),
                   InfoRow('Số serial', e.serial),
                   InfoRow('Số lượng', '${e.quantity} ${e.unit}'),
                   InfoRow('Vị trí', e.location),
                   InfoRow('Đưa vào sử dụng', fmtDate(e.inUseSince)),
+                ],
+              ),
+              const SizedBox(height: 12),
+              Row(
+                children: [
+                  Expanded(
+                    child: OutlinedButton.icon(
+                      onPressed: () => showComingSoon(context, 'Sổ theo dõi phương tiện (Mẫu 01 TT 36)'),
+                      icon: const Icon(Icons.menu_book_outlined, size: 18),
+                      label: const Text('Sổ Mẫu 01', overflow: TextOverflow.ellipsis),
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: OutlinedButton.icon(
+                      onPressed: () => showComingSoon(context, 'Xuất biên bản tự kiểm tra (PC02)'),
+                      icon: const Icon(Icons.picture_as_pdf_outlined, size: 18),
+                      label: const Text('Xuất PC02', overflow: TextOverflow.ellipsis),
+                    ),
+                  ),
                 ],
               ),
               const SizedBox(height: 12),

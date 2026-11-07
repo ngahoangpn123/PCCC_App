@@ -24,7 +24,7 @@ class _MemberFormScreenState extends State<MemberFormScreen> {
   late final _trainingNote = TextEditingController(
     text: widget.member?.trainingNote ?? 'Chưa có thông tin huấn luyện',
   );
-  late String _role = widget.member?.role ?? memberRoles.last;
+  late String _role = widget.member?.role ?? 'Đội viên';
   late MemberStatus _status = widget.member?.status ?? MemberStatus.active;
   late bool _trainingOk = widget.member?.trainingOk ?? false;
 

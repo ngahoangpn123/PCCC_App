@@ -119,6 +119,7 @@ class _TrainingSessionDetailScreenState extends State<TrainingSessionDetailScree
                   InfoRow('Thời lượng', '${s.durationMinutes} phút'),
                   InfoRow('Địa điểm', s.location),
                   InfoRow('Người hướng dẫn', s.instructor),
+                  InfoRow('Loại', s.kind),
                   InfoRow('Hình thức', s.format),
                   InfoRow('Nội dung', s.content),
                 ],

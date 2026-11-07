@@ -26,6 +26,7 @@ class _ScenarioFormScreenState extends State<ScenarioFormScreen> {
   late final _equipment = TextEditingController(text: widget.scenario?.equipment.join('\n') ?? '');
   late final _steps = TextEditingController(text: widget.scenario?.steps.join('\n') ?? '');
   late String _type = widget.scenario?.type ?? scenarioTypes.first;
+  late String _formType = widget.scenario?.formType ?? scenarioForms.first;
 
   @override
   void dispose() {
@@ -56,6 +57,7 @@ class _ScenarioFormScreenState extends State<ScenarioFormScreen> {
       ..code = _code.text.trim()
       ..name = _name.text.trim()
       ..type = _type
+      ..formType = _formType
       ..objective = _objective.text.trim()
       ..scope = _scope.text.trim()
       ..location = _location.text.trim()
@@ -82,6 +84,13 @@ class _ScenarioFormScreenState extends State<ScenarioFormScreen> {
             const FormSectionTitle('Thông tin chung'),
             AppTextField(label: 'Mã phương án', controller: _code, required: true),
             AppTextField(label: 'Tên phương án', controller: _name, required: true),
+            DropdownField<String>(
+              label: 'Biểu mẫu phương án',
+              value: _formType,
+              items: scenarioForms,
+              labelOf: (v) => v,
+              onChanged: (v) => setState(() => _formType = v),
+            ),
             DropdownField<String>(
               label: 'Loại hình',
               value: _type,
